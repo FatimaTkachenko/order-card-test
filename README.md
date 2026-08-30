@@ -1,3 +1,5 @@
+[![Java CI](https://github.com/FatimaTkachenko/order-card-test/actions/workflows/build.yml/badge.svg)](https://github.com/FatimaTkachenko/order-card-test/actions/workflows/build.yml)
+
 # Тестирование формы заказа карты
 
 ## Описание проекта
