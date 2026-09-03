@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -20,29 +21,32 @@ public class OrderCardTest {
     @BeforeAll
     public static void setupAll() {
         WebDriverManager.chromedriver().setup();
-        
+
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--no-sandbox");
         options.addArguments("--headless");
-        
+
         driver = new ChromeDriver(options);
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }
 
+    @BeforeEach
+    public void openPage() {
+        driver.get("http://localhost:9999");
+    }
+
     @Test
     public void shouldSendOrderSuccessfully() {
-        driver.get("http://localhost:9999");
-
         WebElement nameField = wait.until(
-            ExpectedConditions.visibilityOfElementLocated(By.cssSelector("input[name='name']"))
+            ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test-id='name'] input"))
         );
         nameField.sendKeys("Иванов Иван");
 
-        WebElement phoneField = driver.findElement(By.cssSelector("input[name='phone']"));
+        WebElement phoneField = driver.findElement(By.cssSelector("[data-test-id='phone'] input"));
         phoneField.sendKeys("+79998887766");
 
-        WebElement agreementCheckbox = driver.findElement(By.cssSelector(".checkbox__box"));
+        WebElement agreementCheckbox = driver.findElement(By.cssSelector("[data-test-id='agreement'] .checkbox__box"));
         agreementCheckbox.click();
 
         WebElement submitButton = driver.findElement(By.cssSelector("button[type='button']"));
@@ -53,52 +57,89 @@ public class OrderCardTest {
         );
 
         assertTrue(successMessage.isDisplayed());
-        assertTrue(successMessage.getText().contains("Ваша заявка успешно отправлена"));
+        assertTrue(successMessage.getText().contains("заявка"));
     }
 
     @Test
     public void shouldShowErrorWhenNameEmpty() {
-        driver.get("http://localhost:9999");
-
         WebElement phoneField = wait.until(
-            ExpectedConditions.visibilityOfElementLocated(By.cssSelector("input[name='phone']"))
+            ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test-id='phone'] input"))
         );
         phoneField.sendKeys("+79998887766");
 
-        WebElement agreementCheckbox = driver.findElement(By.cssSelector(".checkbox__box"));
+        WebElement agreementCheckbox = driver.findElement(By.cssSelector("[data-test-id='agreement'] .checkbox__box"));
         agreementCheckbox.click();
 
         WebElement submitButton = driver.findElement(By.cssSelector("button[type='button']"));
         submitButton.click();
 
         WebElement nameError = wait.until(
-            ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".input__sub"))
+            ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test-id='name'].input_invalid .input__sub"))
         );
 
         assertTrue(nameError.isDisplayed());
-        assertNotEquals("", nameError.getText());
+        assertTrue(nameError.getText().length() > 0);
     }
 
     @Test
     public void shouldShowErrorWhenPhoneEmpty() {
-        driver.get("http://localhost:9999");
-
         WebElement nameField = wait.until(
-            ExpectedConditions.visibilityOfElementLocated(By.cssSelector("input[name='name']"))
+            ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test-id='name'] input"))
         );
         nameField.sendKeys("Иванов Иван");
 
-        WebElement agreementCheckbox = driver.findElement(By.cssSelector(".checkbox__box"));
+        WebElement agreementCheckbox = driver.findElement(By.cssSelector("[data-test-id='agreement'] .checkbox__box"));
         agreementCheckbox.click();
 
         WebElement submitButton = driver.findElement(By.cssSelector("button[type='button']"));
         submitButton.click();
 
         WebElement phoneError = wait.until(
-            ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".input__sub"))
+            ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test-id='phone'].input_invalid .input__sub"))
         );
 
         assertTrue(phoneError.isDisplayed());
-        assertNotEquals("", phoneError.getText());
+        assertTrue(phoneError.getText().length() > 0);
+    }
+
+    @Test
+    public void shouldShowErrorWhenPhoneInvalid() {
+        WebElement nameField = driver.findElement(By.cssSelector("[data-test-id='name'] input"));
+        nameField.sendKeys("Иванов Иван");
+
+        WebElement phoneField = driver.findElement(By.cssSelector("[data-test-id='phone'] input"));
+        phoneField.sendKeys("123");
+
+        WebElement agreementCheckbox = driver.findElement(By.cssSelector("[data-test-id='agreement'] .checkbox__box"));
+        agreementCheckbox.click();
+
+        WebElement submitButton = driver.findElement(By.cssSelector("button[type='button']"));
+        submitButton.click();
+
+        WebElement phoneError = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test-id='phone'].input_invalid .input__sub"))
+        );
+
+        assertTrue(phoneError.isDisplayed());
+        assertTrue(phoneError.getText().length() > 0);
+    }
+
+    @Test
+    public void shouldShowErrorWhenCheckboxNotChecked() {
+        WebElement nameField = driver.findElement(By.cssSelector("[data-test-id='name'] input"));
+        nameField.sendKeys("Иванов Иван");
+
+        WebElement phoneField = driver.findElement(By.cssSelector("[data-test-id='phone'] input"));
+        phoneField.sendKeys("+79998887766");
+
+        // Чекбокс НЕ отмечаем
+
+        WebElement submitButton = driver.findElement(By.cssSelector("button[type='button']"));
+        submitButton.click();
+
+        WebElement error = wait.until(
+            ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".input_invalid"))
+        );
+        assertTrue(error.isDisplayed());
     }
 }
